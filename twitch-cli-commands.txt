@@ -1,0 +1,1 @@
+twitch event trigger add-redemption -F http://localhost:9999/eventsub --item-id TEST_REWARD_ID -t 24608449 -f 452143390

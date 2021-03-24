@@ -45,3 +45,16 @@ export const getChannelIdByChannelName = async (channelName) => {
 
   return data.data[0].id;
 };
+
+export const getUserByUserId = async (id) => {
+  // TODO: implement caching?
+  const { data } = await helixClient.get("/users", {
+    params: { id: id },
+  });
+
+  if (!data.data || data.data.length === 0) {
+    return null;
+  }
+
+  return data.data[0];
+};

@@ -6,16 +6,26 @@ import { config } from "dotenv";
 import PRIZE_TYPES from "./constants/prize-types.js";
 import PRIZE_STATUSES from "./constants/prize-statuses.js";
 import db from "./lib/db.js";
-import { getChannelIdByChannelName, init } from "./lib/twitch-api.js";
+import {
+  getChannelIdByChannelName,
+  getUserByUserId,
+  init,
+} from "./lib/twitch-api.js";
 
 config();
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
 
 import * as legsOrHotdogsPrize from "./prizes/legs-or-hotdogs.js";
+import * as icebreakerPrize from "./prizes/icebreaker.js";
 import sendWhisperToUser from "./lib/send-whisper-to-user.js";
 import sendPusherMessage from "./lib/send-pusher-message.js";
 import sleep from "./lib/sleep.js";
+
+const prizeLogicByPrizeType = {
+  [PRIZE_TYPES.LEGS_OR_HOTDOGS_QUIZ]: legsOrHotdogsPrize,
+  [PRIZE_TYPES.ICEBREAKER]: icebreakerPrize,
+};
 
 (async () => {
   await init();
@@ -45,9 +55,14 @@ import sleep from "./lib/sleep.js";
         .first();
 
       if (channel && event.reward.id === channel.reward_id) {
+        const viewerId = event.user_id;
+        console.log(viewerId);
+        const viewer = await getUserByUserId(viewerId);
         await db("prizes").insert({
           channel_id: channelId,
-          viewer_id: event.user_id,
+          viewer_id: viewerId,
+          viewer_display_name: viewer.display_name,
+          viewer_profile_image_url: viewer.profile_image_url,
         });
 
         await sendPusherMessage(channelId, "queueUpdate");
@@ -70,9 +85,17 @@ import sleep from "./lib/sleep.js";
       return res.sendStatus(404);
     }
 
-    return res.json({
-      channel_id: channelId,
-    });
+    const channel = await db("channels")
+      .where({
+        channel_id: channelId,
+      })
+      .first();
+
+    if (!channel) {
+      return res.sendStatus(404);
+    }
+
+    return res.json(channel);
   });
 
   app.get("/:channelId/queue", async (req, res) => {
@@ -104,7 +127,7 @@ import sleep from "./lib/sleep.js";
       }
 
       // TODO: implement prize randomization
-      const randomPriceType = PRIZE_TYPES.LEGS_OR_HOTDOGS_QUIZ;
+      const randomPrizeType = PRIZE_TYPES.LEGS_OR_HOTDOGS_QUIZ;
 
       const channel = await db("channels")
         .where({
@@ -125,7 +148,7 @@ import sleep from "./lib/sleep.js";
         })
         .update({
           status: PRIZE_STATUSES.IN_PROGRESS,
-          type: randomPriceType,
+          type: randomPrizeType,
         });
 
       // add prize to channel data
@@ -139,7 +162,7 @@ import sleep from "./lib/sleep.js";
 
       await sendPusherMessage(channelId, "prizeStartAnimation", {
         ...prize,
-        type: randomPriceType,
+        type: randomPrizeType,
         status: PRIZE_STATUSES.IN_PROGRESS,
       });
 
@@ -148,7 +171,9 @@ import sleep from "./lib/sleep.js";
       // broadcast active prize update
       await sendPusherMessage(channelId, "activePrizeUpdate");
 
-      legsOrHotdogsPrize.start(prizeId);
+      const prizeLogic = prizeLogicByPrizeType[randomPrizeType];
+
+      prizeLogic.start(prizeId);
 
       res.sendStatus(204);
     } catch (err) {

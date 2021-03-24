@@ -5,7 +5,7 @@ export default function getChatInput({
   channelId,
   channelName,
   viewerId,
-  validate,
+  validate = () => true,
 }) {
   return new Promise((resolve, reject) => {
     const client = getClient({ channels: [channelName] });

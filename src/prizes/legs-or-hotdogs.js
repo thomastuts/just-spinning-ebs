@@ -2,6 +2,7 @@ import getChatInput from "../lib/get-chat-input.js";
 import db from "../lib/db.js";
 import sendPusherMessage from "../lib/send-pusher-message.js";
 import getRandomElementFromArray from "../lib/get-random-element-from-array.js";
+import PRIZE_STATUSES from "../constants/prize-statuses.js";
 
 const IMAGE_URLS_BY_TYPE = {
   legs: [
@@ -87,8 +88,15 @@ export async function start(prizeId) {
     })(),
   ]);
 
-  console.log("Inputs:");
-  console.log({ streamerInput, viewerInput });
+  await db("prizes")
+    .where({
+      id: prizeId,
+    })
+    .update({
+      status: PRIZE_STATUSES.COMPLETED,
+    });
+
+  await sendPusherMessage(channelId, "activePrizeUpdate");
 
   // await sendPusherMessage(channelId, "prizeEndAnimation");
 }

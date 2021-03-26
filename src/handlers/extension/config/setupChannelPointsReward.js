@@ -48,12 +48,8 @@ export default async function setupChannelPointsReward(req, res) {
       }
     );
 
-    console.log("Reward creation response data:");
-    console.log(customRewardCreationData);
-
     const userData = await getUserByUserId(userInfo.sub);
 
-    // TODO: update if exists?
     await db("channels").insert({
       channel_id: userData.id,
       channel_display_name: userData.display_name,

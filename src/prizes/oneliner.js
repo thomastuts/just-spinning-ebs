@@ -1,6 +1,6 @@
 import getChatInput from "../lib/get-chat-input.js";
 import db from "../lib/db.js";
-import sendPusherMessage from "../lib/send-pusher-message.js";
+import sendPubsubMessage from "../lib/send-pubsub-message.js";
 import getRandomElementFromArray from "../lib/get-random-element-from-array.js";
 import { getClient } from "../lib/tmi.js";
 import PRIZE_STATUSES from "../constants/prize-statuses.js";
@@ -42,7 +42,7 @@ export async function start(prizeId) {
 
   const channelId = prize.channel_id;
 
-  await sendPusherMessage(channelId, "activePrizeUpdate");
+  await sendPubsubMessage(channelId, "activePrizeUpdate");
 
   // await Promise.all([
   //   (async () => {
@@ -122,7 +122,7 @@ export async function start(prizeId) {
             metadata: metadata,
           });
 
-        await sendPusherMessage(channelId, "activePrizeUpdate");
+        await sendPubsubMessage(channelId, "activePrizeUpdate");
       }
     }
   });
@@ -130,6 +130,6 @@ export async function start(prizeId) {
   setTimeout(async () => {
     console.log("Voting ended");
     client.disconnect();
-    await sendPusherMessage(channelId, "activePrizeUpdate");
+    await sendPubsubMessage(channelId, "activePrizeUpdate");
   }, 10000);
 }

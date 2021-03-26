@@ -1,16 +1,15 @@
-import db from "../../lib/db.js";
-import PRIZE_STATUSES from "../../constants/prize-statuses.js";
-import sendPusherMessage from "../../lib/send-pusher-message.js";
+import db from "../../../lib/db.js";
+import PRIZE_STATUSES from "../../../constants/prize-statuses.js";
+import sendPubsubMessage from "../../../lib/send-pubsub-message.js";
 
 export default async function fulfillPrize(req, res) {
   try {
     const prizeId = req.params.prizeId;
-    const channelId = req.params.channelId;
+    const channelId = req.token.channel_id;
     const prize = await db("prizes")
       .where({
         id: prizeId,
         channel_id: channelId,
-        status: PRIZE_STATUSES.IN_PROGRESS,
       })
       .first();
 
@@ -37,7 +36,7 @@ export default async function fulfillPrize(req, res) {
       });
 
     // broadcast active prize update
-    await sendPusherMessage(channelId, "activePrizeUpdate");
+    await sendPubsubMessage(channelId, "activePrizeUpdate");
     res.sendStatus(204);
   } catch (err) {
     console.log(err);

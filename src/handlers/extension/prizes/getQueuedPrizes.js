@@ -1,5 +1,5 @@
-import db from "../../lib/db.js";
-import PRIZE_STATUSES from "../../constants/prize-statuses.js";
+import db from "../../../lib/db.js";
+import PRIZE_STATUSES from "../../../constants/prize-statuses.js";
 
 export default async function getQueuedPrizes(req, res) {
   try {

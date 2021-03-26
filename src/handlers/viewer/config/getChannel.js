@@ -1,5 +1,4 @@
-import { getChannelIdByChannelName } from "../lib/twitch-api.js";
-import db from "../lib/db.js";
+import db from "../../../lib/db.js";
 
 export default async function (req, res) {
   const { channelId } = req.params;

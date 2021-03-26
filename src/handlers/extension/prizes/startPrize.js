@@ -1,12 +1,12 @@
-import db from "../../lib/db.js";
-import PRIZE_STATUSES from "../../constants/prize-statuses.js";
-import PRIZE_TYPES from "../../constants/prize-types.js";
-import sendPusherMessage from "../../lib/send-pusher-message.js";
-import sleep from "../../lib/sleep.js";
-import * as legsOrHotdogsPrize from "../../prizes/legs-or-hotdogs.js";
-import * as icebreakerPrize from "../../prizes/icebreaker.js";
-import * as guessTheWordPrize from "../../prizes/guess-the-word.js";
-import * as fillInTheBlankPrize from "../../prizes/fill-in-the-blank.js";
+import db from "../../../lib/db.js";
+import PRIZE_STATUSES from "../../../constants/prize-statuses.js";
+import PRIZE_TYPES from "../../../constants/prize-types.js";
+import sendPubsubMessage from "../../../lib/send-pubsub-message.js";
+import sleep from "../../../lib/sleep.js";
+import * as legsOrHotdogsPrize from "../../../prizes/legs-or-hotdogs.js";
+import * as icebreakerPrize from "../../../prizes/icebreaker.js";
+import * as guessTheWordPrize from "../../../prizes/guess-the-word.js";
+import * as fillInTheBlankPrize from "../../../prizes/fill-in-the-blank.js";
 
 const prizeLogicByPrizeType = {
   [PRIZE_TYPES.LEGS_OR_HOTDOGS_QUIZ]: legsOrHotdogsPrize,
@@ -65,7 +65,7 @@ export default async function startPrize(req, res) {
         active_prize_id: prizeId,
       });
 
-    await sendPusherMessage(channelId, "prizeStartAnimation", {
+    await sendPubsubMessage(channelId, "prizeStartAnimation", {
       ...prize,
       type: randomPrizeType,
       status: PRIZE_STATUSES.IN_PROGRESS,
@@ -74,7 +74,7 @@ export default async function startPrize(req, res) {
     await sleep(6500);
 
     // broadcast active prize update
-    await sendPusherMessage(channelId, "activePrizeUpdate");
+    await sendPubsubMessage(channelId, "activePrizeUpdate");
 
     const prizeLogic = prizeLogicByPrizeType[randomPrizeType];
 

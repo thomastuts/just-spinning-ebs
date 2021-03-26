@@ -1,6 +1,6 @@
 import db from "../../lib/db.js";
 import { getUserByUserId } from "../../lib/twitch-api.js";
-import sendPusherMessage from "../../lib/send-pusher-message.js";
+import sendPubsubMessage from "../../lib/send-pubsub-message.js";
 
 export default async function eventSub(req, res) {
   if (
@@ -27,7 +27,7 @@ export default async function eventSub(req, res) {
         viewer_profile_image_url: viewer.profile_image_url,
       });
 
-      await sendPusherMessage(channelId, "queueUpdate");
+      await sendPubsubMessage(channelId, "queueUpdate");
     }
   }
 

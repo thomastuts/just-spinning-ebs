@@ -1,6 +1,6 @@
 import getChatInput from "../lib/get-chat-input.js";
 import db from "../lib/db.js";
-import sendPusherMessage from "../lib/send-pusher-message.js";
+import sendPubsubMessage from "../lib/send-pubsub-message.js";
 import getRandomElementFromArray from "../lib/get-random-element-from-array.js";
 import PRIZE_STATUSES from "../constants/prize-statuses.js";
 
@@ -59,7 +59,7 @@ export async function start(prizeId) {
 
   const channelId = prize.channel_id;
 
-  await sendPusherMessage(channelId, "activePrizeUpdate");
+  await sendPubsubMessage(channelId, "activePrizeUpdate");
 
   const [streamerInput, viewerInput] = await Promise.all([
     (async () => {
@@ -70,7 +70,7 @@ export async function start(prizeId) {
         validate: messageContentValidator,
       });
       await persistInput({ prizeId, input, role: "streamer" });
-      await sendPusherMessage(channelId, "activePrizeUpdate");
+      await sendPubsubMessage(channelId, "activePrizeUpdate");
 
       return input;
     })(),
@@ -82,7 +82,7 @@ export async function start(prizeId) {
         validate: messageContentValidator,
       });
       await persistInput({ prizeId, input, role: "viewer" });
-      await sendPusherMessage(channelId, "activePrizeUpdate");
+      await sendPubsubMessage(channelId, "activePrizeUpdate");
 
       return input;
     })(),
@@ -96,7 +96,7 @@ export async function start(prizeId) {
       status: PRIZE_STATUSES.COMPLETED,
     });
 
-  await sendPusherMessage(channelId, "activePrizeUpdate");
+  await sendPubsubMessage(channelId, "activePrizeUpdate");
 
   // await sendPusherMessage(channelId, "prizeEndAnimation");
 }

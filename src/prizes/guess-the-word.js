@@ -2,7 +2,7 @@ import _ from "lodash";
 
 import getChatInput from "../lib/get-chat-input.js";
 import db from "../lib/db.js";
-import sendPusherMessage from "../lib/send-pusher-message.js";
+import sendPubsubMessage from "../lib/send-pubsub-message.js";
 import getRandomElementFromArray from "../lib/get-random-element-from-array.js";
 import { getClient } from "../lib/tmi.js";
 import PRIZE_STATUSES from "../constants/prize-statuses.js";
@@ -111,7 +111,7 @@ export async function start(prizeId) {
 
   const channelId = prize.channel_id;
 
-  await sendPusherMessage(channelId, "activePrizeUpdate");
+  await sendPubsubMessage(channelId, "activePrizeUpdate");
 
   const client = getClient({ channels: [channelName] });
 
@@ -141,7 +141,7 @@ export async function start(prizeId) {
           streamer_input: prize.streamer_input,
         });
 
-      await sendPusherMessage(channelId, "activePrizeUpdate");
+      await sendPubsubMessage(channelId, "activePrizeUpdate");
     }
 
     // TODO: less strict matching, use lowercase etc
@@ -154,7 +154,7 @@ export async function start(prizeId) {
           status: PRIZE_STATUSES.COMPLETED,
         });
 
-      await sendPusherMessage(channelId, "activePrizeUpdate");
+      await sendPubsubMessage(channelId, "activePrizeUpdate");
 
       client.disconnect();
     }
@@ -170,7 +170,7 @@ export async function start(prizeId) {
     });
     console.log("Viewer:", input);
     await persistInput({ prizeId, input, role: "viewer" });
-    await sendPusherMessage(channelId, "activePrizeUpdate");
+    await sendPubsubMessage(channelId, "activePrizeUpdate");
   }
 
   console.log("FINISHED!");
@@ -185,7 +185,7 @@ export async function start(prizeId) {
         viewerId: channelId,
       });
       await persistInput({ prizeId, input, role: "streamer" });
-      await sendPusherMessage(channelId, "activePrizeUpdate");
+      await sendPubsubMessage(channelId, "activePrizeUpdate");
 
       return input;
     })(),

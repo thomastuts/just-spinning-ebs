@@ -1,6 +1,6 @@
 import getChatInput from "../lib/get-chat-input.js";
 import db from "../lib/db.js";
-import sendPusherMessage from "../lib/send-pusher-message.js";
+import sendPubsubMessage from "../lib/send-pubsub-message.js";
 import getRandomElementFromArray from "../lib/get-random-element-from-array.js";
 
 const ICEBREAKER_PROMPTS = [
@@ -59,5 +59,5 @@ export async function start(prizeId) {
     viewerId: prize.viewer_id,
   });
   await persistInput({ prizeId, input, role: "viewer" });
-  await sendPusherMessage(channelId, "activePrizeUpdate");
+  await sendPubsubMessage(channelId, "activePrizeUpdate");
 }

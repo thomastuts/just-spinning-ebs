@@ -10,15 +10,16 @@ config();
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
 
 import eventSub from "./handlers/events/eventSub.js";
-import getChannel from "./handlers/getChannel.js";
-import getQueuedPrizes from "./handlers/prizes/getQueuedPrizes.js";
-import startPrize from "./handlers/prizes/startPrize.js";
-import fulfillPrize from "./handlers/prizes/fullfillPrize.js";
-import getActivePrize from "./handlers/prizes/getActivePrize.js";
+import getChannel from "./handlers/viewer/config/getChannel.js";
+import getQueuedPrizes from "./handlers/extension/prizes/getQueuedPrizes.js";
+import startPrize from "./handlers/extension/prizes/startPrize.js";
+import fulfillPrize from "./handlers/extension/prizes/fullfillPrize.js";
+import getActivePrizeExtension from "./handlers/extension/prizes/getActivePrize.js";
+import getActivePrizeViewer from "./handlers/viewer/prizes/getActivePrize.js";
 import getFakeAuthTokenForChannelId from "./handlers/dev/getFakeAuthTokenForChannelId.js";
 import { createAuthTokenMiddleware } from "./middleware.js";
-import getChannelConfig from "./handlers/config/getChannelConfig.js";
-import setupChannelPointsReward from "./handlers/config/setupChannelPointsReward.js";
+import getChannelConfig from "./handlers/extension/config/getChannelConfig.js";
+import setupChannelPointsReward from "./handlers/extension/config/setupChannelPointsReward.js";
 
 const authTokenRequiredMiddleware = createAuthTokenMiddleware({
   isTokenRequired: true,
@@ -37,15 +38,33 @@ const authTokenRequiredMiddleware = createAuthTokenMiddleware({
     res.send(req.body || "No body.");
   });
 
-  app.get("/debug/fake-auth-token", getFakeAuthTokenForChannelId);
+  // Extension API routes
+  app.get("/ext/config", [authTokenRequiredMiddleware], getChannelConfig);
+  app.get("/ext/queue", [authTokenRequiredMiddleware], getQueuedPrizes);
+  app.get(
+    "/ext/active-prize",
+    [authTokenRequiredMiddleware],
+    getActivePrizeExtension
+  );
+  app.get("/ext/setup-channel-points-reward", setupChannelPointsReward);
+  app.post(
+    "/ext/prizes/:prizeId/start",
+    [authTokenRequiredMiddleware],
+    startPrize
+  );
+  app.post(
+    "/ext/prizes/:prizeId/fulfill",
+    [authTokenRequiredMiddleware],
+    fulfillPrize
+  );
+  app.get("/ext/debug/fake-auth-token", getFakeAuthTokenForChannelId);
+
+  // Viewer API routes
+  app.get("/viewer/channels/:channelId", getChannel);
+  app.get("/viewer/channels/:channelId/active-prize", getActivePrizeViewer);
+
+  // Other routes
   app.post("/eventsub", eventSub);
-  app.get("/channels/:channelId", getChannel);
-  app.get("/channels/:channelId/active-prize", getActivePrize);
-  app.get("/setup-channel-points-reward", setupChannelPointsReward);
-  app.get("/queue", [authTokenRequiredMiddleware], getQueuedPrizes);
-  app.post("/queue/:prizeId/start", [authTokenRequiredMiddleware], startPrize);
-  app.get("/config", [authTokenRequiredMiddleware], getChannelConfig);
-  app.post("/:channelId/prizes/:prizeId/fulfill", fulfillPrize);
 
   app.listen(process.env.PORT, () => {
     console.log(

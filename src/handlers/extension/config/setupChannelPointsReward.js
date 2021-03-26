@@ -1,7 +1,7 @@
 import axios from "axios";
 import path from "path";
 
-import db from "../../lib/db.js";
+import db from "../../../lib/db.js";
 
 //https://localhost/#access_token=tp9d8bsnfrogr65lelachu0cyxx6br&scope=channel%3Amanage%3Aredemptions&token_type=bearer
 export default async function setupChannelPointsReward(req, res) {

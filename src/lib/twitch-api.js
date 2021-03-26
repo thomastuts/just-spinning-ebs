@@ -4,7 +4,13 @@ import { config } from "dotenv";
 config();
 
 const getAccessToken = async () => {
-  return Promise.resolve("bytop4v6f8ybc3mxx0o8zxf7mf6r4x");
+  console.log("Twitch API init:", {
+    params: {
+      client_id: process.env.TWITCH_API_CLIENT_ID,
+      client_secret: process.env.TWITCH_API_CLIENT_SECRET,
+      grant_type: "client_credentials",
+    },
+  });
 
   const response = await axios.post("https://id.twitch.tv/oauth2/token", null, {
     params: {
@@ -13,6 +19,8 @@ const getAccessToken = async () => {
       grant_type: "client_credentials",
     },
   });
+
+  console.log(response.data);
 
   return response.data.access_token;
 };
@@ -47,6 +55,7 @@ export const getChannelIdByChannelName = async (channelName) => {
 };
 
 export const getUserByUserId = async (id) => {
+  console.log("Getting user:", id);
   // TODO: implement caching?
   const { data } = await helixClient.get("/users", {
     params: { id: id },

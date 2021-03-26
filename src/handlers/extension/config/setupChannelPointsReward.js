@@ -48,6 +48,9 @@ export default async function setupChannelPointsReward(req, res) {
       }
     );
 
+    console.log("Reward creation response data:");
+    console.log(customRewardCreationData);
+
     const userData = await getUserByUserId(userInfo.sub);
 
     // TODO: update if exists?

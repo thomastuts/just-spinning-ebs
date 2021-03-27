@@ -71,7 +71,7 @@ export const getUserByUserId = async (id) => {
 
 export const createEventSubSubscription = async ({ type, channelId }) => {
   const payload = {
-    type: "channel.follow",
+    type: type,
     version: "1",
     condition: {
       broadcaster_user_id: channelId,

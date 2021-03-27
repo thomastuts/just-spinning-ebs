@@ -3,6 +3,15 @@ import { getUserByUserId } from "../../lib/twitch-api.js";
 import sendPubsubMessage from "../../lib/send-pubsub-message.js";
 
 export default async function eventSub(req, res) {
+  if (
+    req.headers["twitch-eventsub-message-type"] ===
+    "webhook_callback_verification"
+  ) {
+    return res.send(req.body.challenge);
+  }
+
+  console.log("EVENT SUB:");
+  console.log(req.body);
   const event = req.body.event;
   const channelId = event.broadcaster_user_id;
 

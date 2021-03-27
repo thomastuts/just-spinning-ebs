@@ -14,7 +14,7 @@ const pusher = new Pusher({
 
 export default function sendPubsubMessage(channelId, event, payload = {}) {
   return Promise.all([
-    pusher.trigger(channelId, event, payload),
+    pusher.trigger(channelId, "broadcast", { event, payload }),
     sendTwitchChannelBroadcast({ channelId, event, data: payload }),
   ]);
 }

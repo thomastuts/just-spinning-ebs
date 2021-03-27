@@ -35,6 +35,7 @@ export const init = async () => {
     headers: {
       "Client-ID": process.env.TWITCH_API_CLIENT_ID,
       Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
     },
   });
 
@@ -66,4 +67,32 @@ export const getUserByUserId = async (id) => {
   }
 
   return data.data[0];
+};
+
+export const createEventSubSubscription = async ({ type, channelId }) => {
+  const payload = {
+    type: "channel.follow",
+    version: "1",
+    condition: {
+      broadcaster_user_id: channelId,
+    },
+    transport: {
+      method: "webhook",
+      callback: process.env.TWITCH_EVENTSUB_CALLBACK_URL,
+      secret: process.env.TWITCH_EVENTSUB_SECRET,
+    },
+  };
+
+  console.log("Creating event subscription:", payload);
+
+  try {
+    const { data: subscriptionResponse } = await helixClient.post(
+      "/eventsub/subscriptions",
+      payload
+    );
+    console.log("Created event subscription successfully.");
+  } catch (err) {
+    console.log("Error creating event subscription:");
+    console.log(err.response);
+  }
 };

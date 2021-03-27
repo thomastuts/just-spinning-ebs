@@ -71,7 +71,7 @@ export default async function startPrize(req, res) {
       status: PRIZE_STATUSES.IN_PROGRESS,
     });
 
-    await sleep(6500);
+    // await sleep(6500);
 
     // broadcast active prize update
     await sendPubsubMessage(channelId, "activePrizeUpdate");

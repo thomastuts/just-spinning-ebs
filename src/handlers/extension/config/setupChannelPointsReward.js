@@ -2,9 +2,12 @@ import axios from "axios";
 import path from "path";
 
 import db from "../../../lib/db.js";
-import { getUserByUserId } from "../../../lib/twitch-api.js";
+import {
+  createEventSubSubscription,
+  getUserByUserId,
+} from "../../../lib/twitch-api.js";
+import sendPubsubMessage from "../../../lib/send-pubsub-message.js";
 
-//https://localhost/#access_token=tp9d8bsnfrogr65lelachu0cyxx6br&scope=channel%3Amanage%3Aredemptions&token_type=bearer
 export default async function setupChannelPointsReward(req, res) {
   try {
     const { data: tokenData } = await axios.post(
@@ -33,12 +36,12 @@ export default async function setupChannelPointsReward(req, res) {
       }
     );
 
-    // TODO: create custom reward
     const { data: customRewardCreationData } = await axios.post(
       `https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=${userInfo.sub}`,
       {
+        // TODO: expand these fields
         title: "Just Spinning",
-        cost: 250, // TODO: custom values given from extension?
+        cost: 250,
       },
       {
         headers: {
@@ -48,6 +51,17 @@ export default async function setupChannelPointsReward(req, res) {
       }
     );
 
+    await Promise.all([
+      createEventSubSubscription({
+        type: "channel.channel_points_custom_reward_redemption.add",
+        channelId: userInfo.sub,
+      }),
+      createEventSubSubscription({
+        type: "channel.channel_points_custom_reward_redemption.remove",
+        channelId: userInfo.sub,
+      }),
+    ]);
+
     const userData = await getUserByUserId(userInfo.sub);
 
     await db("channels").insert({
@@ -56,6 +70,12 @@ export default async function setupChannelPointsReward(req, res) {
       profile_image_url: userData.profile_image_url,
       reward_id: customRewardCreationData.data[0].id,
     });
+
+    await sendPubsubMessage(userInfo.sub, "configUpdate");
+
+    return res.sendFile(
+      path.join(process.cwd(), "src/views/setup-reward-success.html")
+    );
   } catch (err) {
     console.log(err);
     // TODO: error handling in case broadcaster can't use custom rewards
@@ -65,8 +85,4 @@ export default async function setupChannelPointsReward(req, res) {
       path.join(process.cwd(), "src/views/setup-reward-fail.html")
     );
   }
-
-  return res.sendFile(
-    path.join(process.cwd(), "src/views/setup-reward-success.html")
-  );
 }

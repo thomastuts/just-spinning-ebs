@@ -5,6 +5,7 @@ export async function seed(knex) {
   await knex("prizes").del();
   const hotdogQuiz = {
     channel_id: "24608449",
+    redemption_id: "CUSTOM_REWARD_REDEMPTION_ID",
     type: PRIZE_TYPES.LEGS_OR_HOTDOGS_QUIZ,
     viewer_id: "452143390",
     viewer_display_name: "streamingtoolsmithtesting",
@@ -19,6 +20,7 @@ export async function seed(knex) {
 
   const iceBreaker = {
     channel_id: "24608449",
+    redemption_id: "CUSTOM_REWARD_REDEMPTION_ID",
     type: PRIZE_TYPES.ICEBREAKER,
     viewer_id: "452143390",
     viewer_display_name: "streamingtoolsmithtesting",
@@ -32,6 +34,7 @@ export async function seed(knex) {
 
   const guessTheWord = {
     channel_id: "24608449",
+    redemption_id: "CUSTOM_REWARD_REDEMPTION_ID",
     type: PRIZE_TYPES.GUESS_THE_WORD,
     viewer_id: "452143390",
     viewer_display_name: "streamingtoolsmithtesting",
@@ -48,6 +51,7 @@ export async function seed(knex) {
 
   const fillInTheBlank = {
     channel_id: "24608449",
+    redemption_id: "CUSTOM_REWARD_REDEMPTION_ID",
     type: PRIZE_TYPES.FILL_IN_THE_BLANK,
     viewer_id: "452143390",
     viewer_display_name: "streamingtoolsmithtesting",
@@ -65,6 +69,7 @@ export async function seed(knex) {
 
   const fillInTheBlankWithVote = {
     channel_id: "24608449",
+    redemption_id: "CUSTOM_REWARD_REDEMPTION_ID",
     type: PRIZE_TYPES.FILL_IN_THE_BLANK,
     viewer_id: "452143390",
     viewer_display_name: "streamingtoolsmithtesting",
@@ -84,6 +89,7 @@ export async function seed(knex) {
 
   const oneliner = {
     channel_id: "24608449",
+    redemption_id: "CUSTOM_REWARD_REDEMPTION_ID",
     type: PRIZE_TYPES.ONELINER,
     viewer_id: "452143390",
     viewer_display_name: "streamingtoolsmithtesting",
@@ -100,6 +106,7 @@ export async function seed(knex) {
 
   const onelinerWithVote = {
     channel_id: "24608449",
+    redemption_id: "CUSTOM_REWARD_REDEMPTION_ID",
     type: PRIZE_TYPES.ONELINER,
     viewer_id: "452143390",
     viewer_display_name: "streamingtoolsmithtesting",

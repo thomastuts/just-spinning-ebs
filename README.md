@@ -17,6 +17,9 @@ Once you have your database, you'll need to run the migrations to create the nec
 To communicate with the viewer (the OBS browser source), the EBS uses Pusher. Create a Pusher project and add
 its details in the `.env` file.
 
+### Running the project
+Run `npm run start:dev`.
+
 ### `.env` file
 Locally, you'll store your environment variables in a `.env` file. When hosting the EBS somewhere like
 on Heroku, it will use the environment variables you define there. Here's an example `.env` file:

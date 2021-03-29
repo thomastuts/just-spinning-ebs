@@ -13,6 +13,10 @@ add the connection string to the `.env` file (see below).
 Once you have your database, you'll need to run the migrations to create the necessary tables. Run
 `npx knex migrate:latest` in your terminal (this requires the `.env` file to be created, again, see below).
 
+### Pusher
+To communicate with the viewer (the OBS browser source), the EBS uses Pusher. Create a Pusher project and add
+its details in the `.env` file.
+
 ### `.env` file
 Locally, you'll store your environment variables in a `.env` file. When hosting the EBS somewhere like
 on Heroku, it will use the environment variables you define there. Here's an example `.env` file:

@@ -40,8 +40,9 @@ export default async function setupChannelPointsReward(req, res) {
       `https://api.twitch.tv/helix/channel_points/custom_rewards?broadcaster_id=${userInfo.sub}`,
       {
         // TODO: expand these fields
-        title: "Just Spinning",
+        title: "Just Spinning - Spin the Wheel",
         cost: 250,
+        background_color: "#37C7F1",
       },
       {
         headers: {
@@ -51,13 +52,20 @@ export default async function setupChannelPointsReward(req, res) {
       }
     );
 
+    await db("tokens").where({ channel_id: userInfo.sub });
+    await db("tokens").insert({
+      channel_id: userInfo.sub,
+      access_token: tokenData.access_token,
+      refresh_token: tokenData.refresh_token,
+    });
+
     await Promise.all([
       createEventSubSubscription({
         type: "channel.channel_points_custom_reward_redemption.add",
         channelId: userInfo.sub,
       }),
       createEventSubSubscription({
-        type: "channel.channel_points_custom_reward_redemption.remove",
+        type: "channel.channel_points_custom_reward.remove",
         channelId: userInfo.sub,
       }),
     ]);

@@ -4,7 +4,7 @@ import cors from "cors";
 import { config } from "dotenv";
 
 import { init } from "./lib/twitch-api.js";
-import { start } from "./prizes/guess-the-word.js";
+import { start } from "./prizes/legs-or-hotdogs.js";
 
 config();
 
@@ -21,6 +21,7 @@ import getFakeAuthTokenForChannelId from "./handlers/dev/getFakeAuthTokenForChan
 import { createAuthTokenMiddleware } from "./middleware.js";
 import getChannelConfig from "./handlers/extension/config/getChannelConfig.js";
 import setupChannelPointsReward from "./handlers/extension/config/setupChannelPointsReward.js";
+import refundPrize from "./handlers/extension/prizes/refundPrize.js";
 
 const authTokenRequiredMiddleware = createAuthTokenMiddleware({
   isTokenRequired: true,
@@ -58,6 +59,11 @@ const authTokenRequiredMiddleware = createAuthTokenMiddleware({
     [authTokenRequiredMiddleware],
     fulfillPrize
   );
+  app.post(
+    "/ext/prizes/:prizeId/refund",
+    [authTokenRequiredMiddleware],
+    refundPrize
+  );
   app.get("/ext/debug/fake-auth-token", getFakeAuthTokenForChannelId);
 
   // Viewer API routes
@@ -73,7 +79,7 @@ const authTokenRequiredMiddleware = createAuthTokenMiddleware({
     );
 
     // setTimeout(() => {
-    //   start(16, "StreamingToolsmith");
+    //   start(17, "StreamingToolsmith");
     // }, 500);
   });
 })();

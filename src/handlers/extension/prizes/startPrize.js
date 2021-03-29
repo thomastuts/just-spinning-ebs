@@ -35,8 +35,10 @@ export default async function startPrize(req, res) {
     }
 
     // TODO: use the random option instead of the hardcoded one
-    // const randomPrizeType = getRandomElementFromArray(Object.values(PRIZE_TYPES));
-    const randomPrizeType = PRIZE_TYPES.ONELINER;
+    const randomPrizeType = getRandomElementFromArray(
+      Object.values(PRIZE_TYPES)
+    );
+    // const randomPrizeType = PRIZE_TYPES.LEGS_OR_HOTDOGS_QUIZ;
 
     const channel = await db("channels")
       .where({
@@ -82,6 +84,7 @@ export default async function startPrize(req, res) {
 
     const prizeLogic = prizeLogicByPrizeType[randomPrizeType];
 
+    console.log("Starting prize:", prizeId);
     prizeLogic.start(prizeId, channel.channel_display_name);
 
     res.sendStatus(204);

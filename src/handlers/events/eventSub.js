@@ -36,6 +36,7 @@ export default async function eventSub(req, res) {
           viewer_id: viewerId,
           viewer_display_name: viewer.display_name,
           viewer_profile_image_url: viewer.profile_image_url,
+          redemption_id: event.id,
         });
 
         await sendPubsubMessage(channelId, "queueUpdate");
@@ -43,7 +44,7 @@ export default async function eventSub(req, res) {
 
       break;
     }
-    case "channel.channel_points_custom_reward_redemption.remove": {
+    case "channel.channel_points_custom_reward.remove": {
       await db("channels").delete().where({
         channel_id: channelId,
       });

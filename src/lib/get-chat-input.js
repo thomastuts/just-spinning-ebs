@@ -10,10 +10,13 @@ export default function getChatInput({
   return new Promise((resolve, reject) => {
     const client = getClient({ channels: [channelName] });
 
+    console.log("CLient:", { channels: [channelName] });
+
     client.connect();
 
     client.on("message", (channel, tags, message, self) => {
       const messageViewerId = tags["user-id"];
+      console.log(messageViewerId, message);
       const isMessageFromViewer = messageViewerId === viewerId;
       const isCommand = message.trim().startsWith("!s");
 

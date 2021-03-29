@@ -129,7 +129,15 @@ export async function start(prizeId, channelName) {
 
   setTimeout(async () => {
     console.log("Voting ended");
-    client.disconnect();
+    metadata.isVoteInProgress = false;
+    await db("prizes")
+      .where({
+        id: prizeId,
+      })
+      .update({
+        metadata: metadata,
+      });
     await sendPubsubMessage(channelId, "activePrizeUpdate");
+    client.disconnect();
   }, 10000);
 }

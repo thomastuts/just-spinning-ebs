@@ -1,6 +1,8 @@
 import axios from "axios";
 import { config } from "dotenv";
 
+import db from "./db.js";
+
 config();
 
 const getAccessToken = async () => {
@@ -95,4 +97,61 @@ export const createEventSubSubscription = async ({ type, channelId }) => {
     console.log("Error creating event subscription:");
     console.log(err.response);
   }
+};
+
+export const refreshOAuthTokenForChannelId = async (channelId) => {
+  console.log("Refreshing OAuth token for channel", channelId);
+  const tokenData = await db("tokens").where({ channel_id: channelId }).first();
+  const { data: updatedTokenData } = await axios.post(
+    "https://id.twitch.tv/oauth2/token",
+    {},
+    {
+      params: {
+        grant_type: "refresh_token",
+        refresh_token: tokenData.refresh_token,
+        client_id: process.env.TWITCH_API_CLIENT_ID,
+        client_secret: process.env.TWITCH_API_CLIENT_SECRET,
+      },
+    }
+  );
+
+  console.log("Updating tokens in DB for channel", channelId);
+  await db("tokens").where({ channel_id: channelId }).update({
+    access_token: updatedTokenData.access_token,
+    refresh_token: updatedTokenData.refresh_token,
+  });
+
+  return updatedTokenData.access_token;
+};
+
+export const updateRedemptionStatus = async ({
+  redemptionId,
+  rewardId,
+  broadcasterId,
+  status,
+}) => {
+  console.log("Updating redemption status:", {
+    redemptionId,
+    rewardId,
+    broadcasterId,
+    status,
+  });
+  const token = await refreshOAuthTokenForChannelId(broadcasterId);
+
+  return helixClient.patch(
+    "/channel_points/custom_rewards/redemptions",
+    {
+      status,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      params: {
+        id: redemptionId,
+        broadcaster_id: broadcasterId,
+        reward_id: rewardId,
+      },
+    }
+  );
 };

@@ -3,7 +3,7 @@ import PRIZE_STATUSES from "../../../constants/prize-statuses.js";
 import sendPubsubMessage from "../../../lib/send-pubsub-message.js";
 import { updateRedemptionStatus } from "../../../lib/twitch-api.js";
 
-export default async function fulfillPrize(req, res) {
+export default async function refundPrize(req, res) {
   try {
     const prizeId = req.params.prizeId;
     const channelId = req.token.channel_id;
@@ -26,7 +26,7 @@ export default async function fulfillPrize(req, res) {
       redemptionId: prize.redemption_id,
       broadcasterId: channelId,
       rewardId: channel.reward_id,
-      status: "FULFILLED",
+      status: "CANCELED",
     });
 
     // Mark queued prize as completed
@@ -35,7 +35,7 @@ export default async function fulfillPrize(req, res) {
         id: prizeId,
       })
       .update({
-        status: PRIZE_STATUSES.COMPLETED,
+        status: PRIZE_STATUSES.REFUNDED,
       });
 
     // remove prize in channel data

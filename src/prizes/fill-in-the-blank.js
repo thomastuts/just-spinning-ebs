@@ -1,5 +1,3 @@
-import _ from "lodash";
-
 import getChatInput from "../lib/get-chat-input.js";
 import db from "../lib/db.js";
 import sendPubsubMessage from "../lib/send-pubsub-message.js";
@@ -10,14 +8,14 @@ import PRIZE_STATUSES from "../constants/prize-statuses.js";
 const PROMPTS = [
   "Introducing X-treme Baseball! It’s like baseball, but with __________!",
   "Dude, do not go in that bathroom. There’s __________ in there.",
-  "Hey Reddit! I’m __________________. Ask me anything.",
-  "Next from J.K. Rowling: Harry Potter and the Chamber of __________________.",
+  "Hey Reddit! I’m __________. Ask me anything.",
+  "Next from J.K. Rowling: Harry Potter and the Chamber of __________.",
   "Kids, I don’t need drugs to get high. I’m high on __________.",
-  "Just once, I’d like to hear you say “Thanks, Mom. Thanks for _________________.”",
-  "Instead of coal, Santa now gives the bad children __________________.",
-  "A romantic, candlelit dinner would be incomplete without __________________.",
-  "Just saw this upsetting video! Please retweet!! #stop_____________",
-  "The class field trip was completely ruined by __________________.",
+  "Just once, I’d like to hear you say “Thanks, Mom. Thanks for __________.”",
+  "Instead of coal, Santa now gives the bad children __________.",
+  "A romantic, candlelit dinner would be incomplete without __________.",
+  "Just saw this upsetting video! Please retweet!! #stop__________",
+  "The class field trip was completely ruined by __________.",
 ];
 
 const persistInput = async ({ prizeId, role, input }) => {
@@ -28,12 +26,11 @@ const persistInput = async ({ prizeId, role, input }) => {
     });
 };
 
-export async function start(prizeId) {
+export async function start(prizeId, channelName) {
   console.log("Starting fill in the blank", prizeId);
-  const channelName = "PUbg"; // TODO
   const randomPrompt = getRandomElementFromArray(PROMPTS);
 
-  const initialMetadata = {
+  const metadata = {
     prompt: randomPrompt,
     isVoteInProgress: false,
     votes: {
@@ -47,7 +44,7 @@ export async function start(prizeId) {
       id: prizeId,
     })
     .update({
-      metadata: initialMetadata,
+      metadata: metadata,
       status: PRIZE_STATUSES.IN_PROGRESS,
     });
 
@@ -61,48 +58,48 @@ export async function start(prizeId) {
 
   await sendPubsubMessage(channelId, "activePrizeUpdate");
 
-  // await Promise.all([
-  //   (async () => {
-  //     const input = await getChatInput({
-  //       channelId,
-  //       channelName,
-  //       viewerId: channelId,
-  //     });
-  //     await persistInput({ prizeId, input, role: "streamer" });
-  //     await sendPusherMessage(channelId, "activePrizeUpdate");
-  //
-  //     return input;
-  //   })(),
-  //   (async () => {
-  //     const input = await getChatInput({
-  //       channelId,
-  //       channelName,
-  //       viewerId: prize.viewer_id,
-  //     });
-  //     await persistInput({ prizeId, input, role: "viewer" });
-  //     await sendPusherMessage(channelId, "activePrizeUpdate");
-  //
-  //     return input;
-  //   })(),
-  // ]);
+  await Promise.all([
+    (async () => {
+      const input = await getChatInput({
+        channelId,
+        channelName,
+        viewerId: channelId,
+      });
+      await persistInput({ prizeId, input, role: "streamer" });
+      await sendPubsubMessage(channelId, "activePrizeUpdate");
+
+      return input;
+    })(),
+    (async () => {
+      const input = await getChatInput({
+        channelId,
+        channelName,
+        viewerId: prize.viewer_id,
+      });
+      await persistInput({ prizeId, input, role: "viewer" });
+      await sendPubsubMessage(channelId, "activePrizeUpdate");
+
+      return input;
+    })(),
+  ]);
+
+  metadata.isVoteInProgress = true;
 
   await db("prizes")
     .where({
       id: prizeId,
     })
     .update({
-      metadata: {
-        ...initialMetadata,
-        isVoteInProgress: true,
-      },
+      metadata: metadata,
     });
+
+  await sendPubsubMessage(channelId, "activePrizeUpdate");
 
   const client = getClient({ channels: [channelName] });
 
   client.connect();
 
   client.on("message", async (channel, tags, message, self) => {
-    message = getRandomElementFromArray(["!s 1", "!s 2"]); // TODO: remove this
     const messageViewerId = tags["user-id"];
     const isMessageFromViewer = messageViewerId === prize.viewer_id;
     const isMessageFromStreamer = messageViewerId === channelId;
@@ -110,8 +107,8 @@ export async function start(prizeId) {
 
     if (!(isMessageFromViewer || isMessageFromStreamer) && isCommand) {
       const hasViewerVoted =
-        initialMetadata.votes.streamer.includes(messageViewerId) ||
-        initialMetadata.votes.viewer.includes(messageViewerId);
+        metadata.votes.streamer.includes(messageViewerId) ||
+        metadata.votes.viewer.includes(messageViewerId);
 
       if (hasViewerVoted) {
         return;
@@ -122,17 +119,11 @@ export async function start(prizeId) {
 
       if (messageContent === "1") {
         console.log("Vote for streamer");
-        initialMetadata.votes.streamer = [
-          ...initialMetadata.votes.streamer,
-          messageViewerId,
-        ];
+        metadata.votes.streamer = [...metadata.votes.streamer, messageViewerId];
         shouldPersist = true;
       } else if (messageContent === "2") {
         console.log("Vote for viewer");
-        initialMetadata.votes.viewer = [
-          ...initialMetadata.votes.viewer,
-          messageViewerId,
-        ];
+        metadata.votes.viewer = [...metadata.votes.viewer, messageViewerId];
         shouldPersist = true;
       }
 
@@ -142,7 +133,7 @@ export async function start(prizeId) {
             id: prizeId,
           })
           .update({
-            metadata: initialMetadata,
+            metadata: metadata,
           });
 
         await sendPubsubMessage(channelId, "activePrizeUpdate");
@@ -152,7 +143,16 @@ export async function start(prizeId) {
 
   setTimeout(async () => {
     console.log("Voting ended");
+    metadata.isVoteInProgress = false;
+    await db("prizes")
+      .where({
+        id: prizeId,
+      })
+      .update({
+        metadata: metadata,
+      });
+    await sendPubsubMessage(channelId, "activePrizeUpdate");
     client.disconnect();
     await sendPubsubMessage(channelId, "activePrizeUpdate");
-  }, 10000);
+  }, 30000);
 }

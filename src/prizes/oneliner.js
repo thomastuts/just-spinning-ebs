@@ -13,9 +13,8 @@ const persistInput = async ({ prizeId, role, input }) => {
     });
 };
 
-export async function start(prizeId) {
+export async function start(prizeId, channelName) {
   console.log("Starting oneliner", prizeId);
-  const channelName = "quin69"; // TODO
 
   const metadata = {
     isVoteInProgress: false,
@@ -44,41 +43,42 @@ export async function start(prizeId) {
 
   await sendPubsubMessage(channelId, "activePrizeUpdate");
 
-  // await Promise.all([
-  //   (async () => {
-  //     const input = await getChatInput({
-  //       channelId,
-  //       channelName,
-  //       viewerId: channelId,
-  //     });
-  //     await persistInput({ prizeId, input, role: "streamer" });
-  //     await sendPusherMessage(channelId, "activePrizeUpdate");
-  //
-  //     return input;
-  //   })(),
-  //   (async () => {
-  //     const input = await getChatInput({
-  //       channelId,
-  //       channelName,
-  //       viewerId: prize.viewer_id,
-  //     });
-  //     await persistInput({ prizeId, input, role: "viewer" });
-  //     await sendPusherMessage(channelId, "activePrizeUpdate");
-  //
-  //     return input;
-  //   })(),
-  // ]);
+  await Promise.all([
+    (async () => {
+      const input = await getChatInput({
+        channelId,
+        channelName,
+        viewerId: channelId,
+      });
+      await persistInput({ prizeId, input, role: "streamer" });
+      await sendPubsubMessage(channelId, "activePrizeUpdate");
+
+      return input;
+    })(),
+    (async () => {
+      const input = await getChatInput({
+        channelId,
+        channelName,
+        viewerId: prize.viewer_id,
+      });
+      await persistInput({ prizeId, input, role: "viewer" });
+      await sendPubsubMessage(channelId, "activePrizeUpdate");
+
+      return input;
+    })(),
+  ]);
+
+  metadata.isVoteInProgress = true;
 
   await db("prizes")
     .where({
       id: prizeId,
     })
     .update({
-      metadata: {
-        ...metadata,
-        isVoteInProgress: true,
-      },
+      metadata,
     });
+
+  await sendPubsubMessage(channelId, "activePrizeUpdate");
 
   const client = getClient({ channels: [channelName] });
 

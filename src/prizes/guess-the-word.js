@@ -83,9 +83,8 @@ const getLetterRevealOrder = (word) => {
   return _.shuffle(uniqueLetters);
 };
 
-export async function start(prizeId) {
+export async function start(prizeId, channelName) {
   console.log("Starting guess the word", prizeId);
-  const channelName = "streamingtoolsmith"; // TODO
   const randomWord = getRandomElementFromArray(WORDS);
 
   const initialMetadata = {
@@ -123,8 +122,10 @@ export async function start(prizeId) {
     const isMessageFromStreamer = messageViewerId === channelId;
     const isCommand = message.trim().startsWith("!s");
 
+    console.log({ isMessageFromStreamer, isMessageFromViewer, isCommand });
+
     // TODO: expand to include streamer input
-    if (isMessageFromViewer && isCommand) {
+    if (isCommand) {
       const messageContent = message.replace("!s", "").trim();
       if (isMessageFromViewer) {
         prize.viewer_input = messageContent;
@@ -132,6 +133,14 @@ export async function start(prizeId) {
         prize.streamer_input = messageContent;
       }
 
+      console.log("Updating in DB");
+      console.log({
+        id: prizeId,
+      });
+      console.log({
+        viewer_input: prize.viewer_input,
+        streamer_input: prize.streamer_input,
+      });
       await db("prizes")
         .where({
           id: prizeId,
@@ -145,7 +154,10 @@ export async function start(prizeId) {
     }
 
     // TODO: less strict matching, use lowercase etc
-    if (prize.viewer_input === randomWord) {
+    if (
+      prize.viewer_input === randomWord ||
+      prize.streamer_input === randomWord
+    ) {
       await db("prizes")
         .where({
           id: prizeId,
@@ -159,43 +171,4 @@ export async function start(prizeId) {
       client.disconnect();
     }
   });
-
-  return;
-
-  while (guesses.viewer !== randomWord) {
-    const input = await getChatInput({
-      channelId,
-      channelName,
-      viewerId: prize.viewer_id,
-    });
-    console.log("Viewer:", input);
-    await persistInput({ prizeId, input, role: "viewer" });
-    await sendPubsubMessage(channelId, "activePrizeUpdate");
-  }
-
-  console.log("FINISHED!");
-
-  return;
-
-  const [streamerInput, viewerInput] = await Promise.all([
-    (async () => {
-      const input = await getChatInput({
-        channelId,
-        channelName,
-        viewerId: channelId,
-      });
-      await persistInput({ prizeId, input, role: "streamer" });
-      await sendPubsubMessage(channelId, "activePrizeUpdate");
-
-      return input;
-    })(),
-    (async () => {
-      return input;
-    })(),
-  ]);
-
-  console.log("Inputs:");
-  console.log({ streamerInput, viewerInput });
-
-  // await sendPusherMessage(channelId, "prizeEndAnimation");
 }

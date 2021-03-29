@@ -10,6 +10,10 @@ export default async function eventSub(req, res) {
     return res.send(req.body.challenge);
   }
 
+  if (!req.body.event) {
+    return res.sendStatus(204);
+  }
+
   console.log("EVENT SUB:");
   console.log(req.body);
   const event = req.body.event;

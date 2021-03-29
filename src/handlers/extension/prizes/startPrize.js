@@ -7,12 +7,15 @@ import * as legsOrHotdogsPrize from "../../../prizes/legs-or-hotdogs.js";
 import * as icebreakerPrize from "../../../prizes/icebreaker.js";
 import * as guessTheWordPrize from "../../../prizes/guess-the-word.js";
 import * as fillInTheBlankPrize from "../../../prizes/fill-in-the-blank.js";
+import * as onelinerPrize from "../../../prizes/oneliner.js";
+import getRandomElementFromArray from "../../../lib/get-random-element-from-array.js";
 
 const prizeLogicByPrizeType = {
   [PRIZE_TYPES.LEGS_OR_HOTDOGS_QUIZ]: legsOrHotdogsPrize,
   [PRIZE_TYPES.ICEBREAKER]: icebreakerPrize,
   [PRIZE_TYPES.GUESS_THE_WORD]: guessTheWordPrize,
   [PRIZE_TYPES.FILL_IN_THE_BLANK]: fillInTheBlankPrize,
+  [PRIZE_TYPES.ONELINER]: onelinerPrize,
 };
 
 export default async function startPrize(req, res) {
@@ -31,8 +34,9 @@ export default async function startPrize(req, res) {
       return res.sendStatus(404);
     }
 
-    // TODO: implement prize randomization
-    const randomPrizeType = PRIZE_TYPES.GUESS_THE_WORD;
+    // TODO: use the random option instead of the hardcoded one
+    // const randomPrizeType = getRandomElementFromArray(Object.values(PRIZE_TYPES));
+    const randomPrizeType = PRIZE_TYPES.ONELINER;
 
     const channel = await db("channels")
       .where({
@@ -65,7 +69,7 @@ export default async function startPrize(req, res) {
         active_prize_id: prizeId,
       });
 
-    await sendPubsubMessage(channelId, "prizeStartAnimation", {
+    await sendPubsubMessage(channelId, "activePrizeStart", {
       ...prize,
       type: randomPrizeType,
       status: PRIZE_STATUSES.IN_PROGRESS,
@@ -78,7 +82,7 @@ export default async function startPrize(req, res) {
 
     const prizeLogic = prizeLogicByPrizeType[randomPrizeType];
 
-    prizeLogic.start(prizeId);
+    prizeLogic.start(prizeId, channel.channel_display_name);
 
     res.sendStatus(204);
   } catch (err) {

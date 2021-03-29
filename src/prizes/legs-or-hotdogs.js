@@ -32,9 +32,7 @@ const persistInput = async ({ prizeId, role, input }) => {
     });
 };
 
-export async function start(prizeId) {
-  const channelName = "streamingtoolsmith"; // TODO
-
+export async function start(prizeId, channelName) {
   const winningOption = getRandomElementFromArray(["legs", "hotdogs"]);
   const randomImageForWinningOption = getRandomElementFromArray(
     IMAGE_URLS_BY_TYPE[winningOption]

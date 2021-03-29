@@ -4,6 +4,7 @@ import cors from "cors";
 import { config } from "dotenv";
 
 import { init } from "./lib/twitch-api.js";
+import { start } from "./prizes/guess-the-word.js";
 
 config();
 
@@ -70,5 +71,9 @@ const authTokenRequiredMiddleware = createAuthTokenMiddleware({
     console.log(
       `Just Spinning EBS listening at http://localhost:${process.env.PORT}`
     );
+
+    // setTimeout(() => {
+    //   start(16, "StreamingToolsmith");
+    // }, 500);
   });
 })();

@@ -14,7 +14,7 @@ const ICEBREAKER_PROMPTS = [
   "If you could be any supernatural creature, what would you be and why?",
   "If you could go to Mars, would you? Why or why not?",
   "If you could have the power of teleportation right now, where would you go and why?",
-  "Would you rather meet your travel back in time to meet your ancestors or to the future to meet your descendants?",
+  "Would you rather travel back in time to meet your ancestors or to the future to meet your descendants?",
   "Would you rather always be slightly late or super early?",
   "Would you rather be able to run at 100 miles per hour or fly at 10 miles per hour?",
   "Do you have any crazy roommate stories?",
@@ -29,9 +29,8 @@ const persistInput = async ({ prizeId, role, input }) => {
     });
 };
 
-export async function start(prizeId) {
+export async function start(prizeId, channelName) {
   console.log("Starting icebreaker.");
-  const channelName = "streamingtoolsmith"; // TODO
 
   const randomPrompt = getRandomElementFromArray(ICEBREAKER_PROMPTS);
 
